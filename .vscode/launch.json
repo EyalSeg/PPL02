@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/L3-rewrite.ts",
+            "program": "${workspaceFolder}/q6.ts",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
