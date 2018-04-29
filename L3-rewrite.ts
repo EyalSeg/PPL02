@@ -11,6 +11,7 @@ import { parseL3 } from "./L3-ast";
 import { isClosure, isCompoundSExp, isEmptySExp, isSymbolSExp, isSExp,
          makeClosure, makeCompoundSExp, makeEmptySExp, makeSymbolSExp,
          Closure, CompoundSExp, SExp, Value } from "./value";
+import { hasError } from "./L1-ast";
 
 export const rewriteLetStar = (cexp: Parsed | Error) : LetExp  | Error => 
 {
@@ -19,6 +20,7 @@ export const rewriteLetStar = (cexp: Parsed | Error) : LetExp  | Error =>
 
     let letStar = cexp as LetStarExp
 
+    //to do check if bindings are 0
     if (letStar.bindings.length == 1)
         return makeLetExp(letStar.bindings, letStar.body)
 
@@ -60,9 +62,17 @@ isAppExp(exp) ? makeAppExp(rewriteAllLetStarCExp(exp.rator),
                            map(rewriteAllLetStarCExp, exp.rands)) :
 isProcExp(exp) ? makeProcExp(exp.args, map(rewriteAllLetStarCExp, exp.body)) :
 isLetExp(exp) ? makeLetExp(exp.bindings, map(rewriteAllLetStarCExp, exp.body)):
-isLetStarExp(exp) ? rewriteLetStar(exp) as LetExp :
+isLetStarExp(exp) ? rewriteLetStar_Nested(exp) as LetExp :
 exp;
 
+const rewriteLetStar_Nested = (letStarExp) : LetExp | Error =>{
+    let body_rewritten = letStarExp.body.map((x) => rewriteAllLetStarCExp(x))
+    if (hasError(body_rewritten))
+        return new Error(getErrorMessages(body_rewritten))
+
+    let letexp = rewriteLetStar(makeLetStarExp(letStarExp.bindings, body_rewritten)) 
+    return letexp
+}
 
 console.log(JSON.stringify(
     rewriteLetStar(parseL3("(let* ((x 5) (y x) (z y)) (+ 1 2))")),null,4))

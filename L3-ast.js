@@ -76,7 +76,7 @@ exports.isAtomicExp = function (x) {
         exports.isPrimOp(x) || exports.isVarRef(x);
 };
 exports.isCompoundExp = function (x) {
-    return exports.isAppExp(x) || exports.isIfExp(x) || exports.isProcExp(x) || exports.isLitExp(x) || exports.isLetExp(x);
+    return exports.isAppExp(x) || exports.isIfExp(x) || exports.isProcExp(x) || exports.isLitExp(x) || exports.isLetExp(x) || exports.isLetStarExp(x);
 };
 exports.isCExp = function (x) {
     return exports.isAtomicExp(x) || exports.isCompoundExp(x);

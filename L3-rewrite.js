@@ -6,10 +6,12 @@ var L3_ast_2 = require("./L3-ast");
 var L3_ast_3 = require("./L3-ast");
 var L3_ast_4 = require("./L3-ast");
 var L3_ast_5 = require("./L3-ast");
+var L1_ast_1 = require("./L1-ast");
 exports.rewriteLetStar = function (cexp) {
     if (!L3_ast_1.isLetStarExp(cexp))
         return Error("expected let* exp ");
     var letStar = cexp;
+    //to do check if bindings are 0
     if (letStar.bindings.length == 1)
         return L3_ast_1.makeLetExp(letStar.bindings, letStar.body);
     var bindingHead = [letStar.bindings[0]];
@@ -40,8 +42,15 @@ var rewriteAllLetStarCExp = function (exp) {
                 L3_ast_3.isAppExp(exp) ? L3_ast_4.makeAppExp(rewriteAllLetStarCExp(exp.rator), ramda_1.map(rewriteAllLetStarCExp, exp.rands)) :
                     L3_ast_3.isProcExp(exp) ? L3_ast_4.makeProcExp(exp.args, ramda_1.map(rewriteAllLetStarCExp, exp.body)) :
                         L3_ast_3.isLetExp(exp) ? L3_ast_1.makeLetExp(exp.bindings, ramda_1.map(rewriteAllLetStarCExp, exp.body)) :
-                            L3_ast_1.isLetStarExp(exp) ? exports.rewriteLetStar(exp) :
+                            L3_ast_1.isLetStarExp(exp) ? rewriteLetStar_Nested(exp) :
                                 exp;
+};
+var rewriteLetStar_Nested = function (letStarExp) {
+    var body_rewritten = letStarExp.body.map(function (x) { return rewriteAllLetStarCExp(x); });
+    if (L1_ast_1.hasError(body_rewritten))
+        return new Error(L3_ast_2.getErrorMessages(body_rewritten));
+    var letexp = exports.rewriteLetStar(L3_ast_1.makeLetStarExp(letStarExp.bindings, body_rewritten));
+    return letexp;
 };
 console.log(JSON.stringify(exports.rewriteLetStar(L3_ast_5.parseL3("(let* ((x 5) (y x) (z y)) (+ 1 2))")), null, 4));
 // MOM, LOOK AT ME! I'M A CODE MONKEY

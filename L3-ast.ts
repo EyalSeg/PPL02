@@ -26,6 +26,7 @@ import { makeCompoundSExp, makeEmptySExp, makeSymbolSExp, SExp } from './value'
 ;;         |  ( lambda ( <var>* ) <cexp>+ ) / ProcExp(params:VarDecl[], body:CExp[]))
 ;;         |  ( if <cexp> <cexp> <cexp> )   / IfExp(test: CExp, then: CExp, alt: CExp)
 ;;         |  ( let ( binding* ) <cexp>+ )  / LetExp(bindings:Binding[], body:CExp[]))
+           |  ( letStar ( binding* ) <cexp>+ )  / LetStarExp(bindings:Binding[], body:CExp[]))
 ;;         |  ( quote <sexp> )              / LitExp(val:SExp)
 ;;         |  ( <cexp> <cexp>* )            / AppExp(operator:CExp, operands:CExp[]))
 ;; <binding>  ::= ( <var> <cexp> )           / Binding(var:VarDecl, val:Cexp)
@@ -118,7 +119,7 @@ export const isAtomicExp = (x: any): x is AtomicExp =>
     isNumExp(x) || isBoolExp(x) || isStrExp(x) ||
     isPrimOp(x) || isVarRef(x);
 export const isCompoundExp = (x: any): x is CompoundExp =>
-    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x);
+    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x) || isLetStarExp(x);
 export const isCExp = (x: any): x is CExp =>
     isAtomicExp(x) || isCompoundExp(x);
 
