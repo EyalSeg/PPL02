@@ -44,7 +44,7 @@ export type Parsed = Exp | Program;
 
 export type Exp = DefineExp | CExp;
 export type AtomicExp = NumExp | BoolExp | StrExp | PrimOp | VarRef;
-export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp;
+export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp | LetStarExp;
 export type CExp =  AtomicExp | CompoundExp;
 
 export interface Program {tag: "Program"; exps: Exp[]; };
@@ -63,6 +63,7 @@ export interface Binding {tag: "Binding"; var: VarDecl; val: CExp; };
 export interface LetExp {tag: "LetExp"; bindings: Binding[]; body: CExp[]; };
 // L3
 export interface LitExp {tag: "LitExp"; val: SExp; };
+export interface LetStarExp {tag: "LetStarExp"; bindings: Binding[]; body: CExp[]; };
 
 // Type value constructors for disjoint types
 export const makeProgram = (exps: Exp[]): Program => ({tag: "Program", exps: exps});
@@ -88,6 +89,8 @@ export const makeLetExp = (bindings: Binding[], body: CExp[]): LetExp =>
 // L3
 export const makeLitExp = (val: SExp): LitExp =>
     ({tag: "LitExp", val: val});
+export const makeLetStarExp = (bindings: Binding[], body: CExp[]): LetStarExp =>
+    ({tag: "LetStarExp", bindings: bindings, body: body})
 
 // Type predicates for disjoint types
 export const isProgram = (x: any): x is Program => x.tag === "Program";
@@ -107,6 +110,7 @@ export const isBinding = (x: any): x is Binding => x.tag === "Binding";
 export const isLetExp = (x: any): x is LetExp => x.tag === "LetExp";
 // l3
 export const isLitExp = (x: any): x is LitExp => x.tag === "LitExp";
+export const isLetStarExp = (x: any): x is LetStarExp => x.tag === "LetStarExp";
 
 // Type predicates for type unions
 export const isExp = (x: any): x is Exp => isDefineExp(x) || isCExp(x);
@@ -213,6 +217,7 @@ const parseL3CompoundCExp = (sexps: any[]): CExp | Error =>
     first(sexps) === "if" ? parseIfExp(sexps) :
     first(sexps) === "lambda" ? parseProcExp(sexps) :
     first(sexps) === "let" ? parseLetExp(sexps) :
+    first(sexps) === "let*" ? parseLetStarExp(sexps) :
     first(sexps) === "quote" ? parseLitExp(sexps) :
     parseAppExp(sexps)
 
@@ -239,6 +244,16 @@ const parseLetExp = (sexps: any[]): LetExp | Error =>
 const safeMakeLetExp = (bindings: Binding[] | Error, body: Array<CExp | Error>) =>
     isError(bindings) ? bindings :
     hasNoError(body) ? makeLetExp(bindings, body) :
+    Error(getErrorMessages(body));
+
+const parseLetStarExp = (sexps: any[]): LetStarExp | Error =>
+    sexps.length < 3 ? Error(`Expected (let (<binding>*) <cexp>+) - ${sexps}`) :
+    safeMakeLetStarExp(parseBindings(sexps[1]),
+                   map(parseL3CExp, sexps.slice(2)));
+
+const safeMakeLetStarExp = (bindings: Binding[] | Error, body: Array<CExp | Error>) =>
+    isError(bindings) ? bindings :
+    hasNoError(body) ? makeLetStarExp(bindings, body) :
     Error(getErrorMessages(body));
 
 const parseBindings = (pairs: any[]): Binding[] | Error =>
