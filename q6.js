@@ -49,5 +49,5 @@ console.log(exports.unparse(L1_ast_2.parseL1("(L1 " +
     "(define x 5)" +
     "(+ x 5)" +
     "(+ (+ (- x y) 3) 4)" +
-    "(#t x))")));
+    "(and #t x))")));
 //# sourceMappingURL=q6.js.map
