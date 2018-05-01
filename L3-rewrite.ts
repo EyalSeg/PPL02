@@ -47,35 +47,49 @@ export const rewriteAllLetStar = (cexp: Parsed | Binding | Error) : Parsed | Bin
     cexp;
 }
 
+const rewriteAllLetStarBinding = (bind : Binding) : Binding => 
+    makeBinding(bind.var, rewriteAllLetStarCExp(bind.val))
+
+
 const rewriteAllLetStarExp = (exp: Exp): Exp =>
     isCExp(exp) ? rewriteAllLetStarCExp(exp) :
     isDefineExp(exp) ? makeDefineExp(exp.var, rewriteAllLetStarCExp(exp.val)) :
     exp;
-
-const rewriteAllLetStarCExp = (exp: CExp): CExp =>
-isAtomicExp(exp) ? exp :
-isLitExp(exp) ? exp :
-isIfExp(exp) ? makeIfExp(rewriteAllLetStarCExp(exp.test),
-                         rewriteAllLetStarCExp(exp.then),
-                         rewriteAllLetStarCExp(exp.alt)) :
-isAppExp(exp) ? makeAppExp(rewriteAllLetStarCExp(exp.rator),
-                           map(rewriteAllLetStarCExp, exp.rands)) :
-isProcExp(exp) ? makeProcExp(exp.args, map(rewriteAllLetStarCExp, exp.body)) :
-isLetExp(exp) ? makeLetExp(exp.bindings, map(rewriteAllLetStarCExp, exp.body)):
-isLetStarExp(exp) ? rewriteLetStar_Nested(exp) as LetExp :
-exp;
 
 const rewriteLetStar_Nested = (letStarExp) : LetExp | Error =>{
     let body_rewritten = letStarExp.body.map((x) => rewriteAllLetStarCExp(x))
     if (hasError(body_rewritten))
         return new Error(getErrorMessages(body_rewritten))
 
-    let letexp = rewriteLetStar(makeLetStarExp(letStarExp.bindings, body_rewritten)) 
+    let newBindings = letStarExp.bindings.map((bind) => rewriteAllLetStarBinding(bind))
+    let letexp = rewriteLetStar(makeLetStarExp(newBindings, body_rewritten)) 
     return letexp
 }
 
-console.log(JSON.stringify(
-    rewriteLetStar(parseL3("(let* ((x 5) (y x) (z y)) (+ 1 2))")),null,4))
+const rewriteAllLetStarCExp = (exp: CExp): CExp =>
+{
+    let returnval = isAtomicExp(exp) ? exp :
+    isLitExp(exp) ? exp :
+    isIfExp(exp) ? makeIfExp(rewriteAllLetStarCExp(exp.test),
+                             rewriteAllLetStarCExp(exp.then),
+                             rewriteAllLetStarCExp(exp.alt)) :
+    isAppExp(exp) ? makeAppExp(rewriteAllLetStarCExp(exp.rator),
+                               map(rewriteAllLetStarCExp, exp.rands)) :
+    isProcExp(exp) ? makeProcExp(exp.args, map(rewriteAllLetStarCExp, exp.body)) :
+    isLetExp(exp) ? makeLetExp(exp.bindings.map((bind) => rewriteAllLetStarBinding(bind)),
+         map(rewriteAllLetStarCExp, exp.body)):
+    isLetStarExp(exp) ? rewriteLetStar_Nested(exp) as LetExp :
+    exp;
+
+    return returnval
+}
+
+
+
+
+console.log(JSON.stringify(rewriteAllLetStar(parseL3
+    ("(let* ((x (let* ((y 5)) y)) (z 7)) (+ x (let* ((t 12)) t)))")),
+    null,4));
 
 
 // MOM, LOOK AT ME! I'M A CODE MONKEY
