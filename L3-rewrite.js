@@ -25,7 +25,7 @@ exports.rewriteLetStar = function (cexp) {
 };
 exports.rewriteAllLetStar = function (cexp) {
     return L3_ast_2.isError(cexp) ? cexp :
-        L3_ast_1.isBinding(cexp) ? cexp :
+        L3_ast_1.isBinding(cexp) ? rewriteAllLetStarBinding(cexp) :
             L3_ast_3.isExp(cexp) ? rewriteAllLetStarExp(cexp) :
                 L3_ast_3.isProgram(cexp) ? L3_ast_1.makeProgram(ramda_1.map(rewriteAllLetStarExp, cexp.exps)) :
                     cexp;
@@ -42,7 +42,7 @@ var rewriteLetStar_Nested = function (letStarExp) {
     var body_rewritten = letStarExp.body.map(function (x) { return rewriteAllLetStarCExp(x); });
     if (L1_ast_1.hasError(body_rewritten))
         return new Error(L3_ast_2.getErrorMessages(body_rewritten));
-    var newBindings = letStarExp.bindings.map(function (bind) { return rewriteAllLetStarBinding(bind); });
+    var newBindings = letStarExp.bindings.map(function (bind) { return exports.rewriteAllLetStar(bind); });
     var letexp = exports.rewriteLetStar(L3_ast_1.makeLetStarExp(newBindings, body_rewritten));
     return letexp;
 };
