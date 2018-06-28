@@ -41,7 +41,7 @@ export const rewriteLetStar = (cexp: Parsed | Error) : LetExp  | Error =>
 export const rewriteAllLetStar = (cexp: Parsed | Binding | Error) : Parsed | Binding | Error =>
 {
     return isError(cexp) ? cexp :
-    isBinding(cexp)? cexp :
+    isBinding(cexp)? rewriteAllLetStarBinding(cexp) :
     isExp(cexp) ? rewriteAllLetStarExp(cexp) :
     isProgram(cexp) ? makeProgram(map(rewriteAllLetStarExp, cexp.exps)) :
     cexp;
@@ -61,7 +61,7 @@ const rewriteLetStar_Nested = (letStarExp) : LetExp | Error =>{
     if (hasError(body_rewritten))
         return new Error(getErrorMessages(body_rewritten))
 
-    let newBindings = letStarExp.bindings.map((bind) => rewriteAllLetStarBinding(bind))
+    let newBindings = letStarExp.bindings.map((bind) => rewriteAllLetStar(bind))
     let letexp = rewriteLetStar(makeLetStarExp(newBindings, body_rewritten)) 
     return letexp
 }
@@ -90,7 +90,6 @@ const rewriteAllLetStarCExp = (exp: CExp): CExp =>
 console.log(JSON.stringify(rewriteAllLetStar(parseL3
     ("(let* ((x (let* ((y 5)) y)) (z 7)) (+ x (let* ((t 12)) t)))")),
     null,4));
-
 
 // MOM, LOOK AT ME! I'M A CODE MONKEY
 //     __,__
